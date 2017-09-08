@@ -572,7 +572,6 @@ export const getAccountsFromPrivateKey = ($privateKey) => {
 		return -1;
 	}
 
-	var accounts = [];
 	var publicKeyEncoded = getPublicKey($privateKey, true);
 	
 	// console.log( publicKeyEncoded );
@@ -591,6 +590,8 @@ export const getAccountsFromPublicKey = (publicKeyEncoded) => {
 
 	var address = toAddress(hexstring2ab(programHash.toString()));
 	// console.log( address );
+
+	var accounts = [];
 
 	accounts[0] = {
 		privatekey: $privateKey,
