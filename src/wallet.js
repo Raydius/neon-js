@@ -575,10 +575,10 @@ export const getAccountsFromPrivateKey = ($privateKey) => {
 	var publicKeyEncoded = getPublicKey($privateKey, true);
 	
 	// console.log( publicKeyEncoded );
-	return getAccountsFromPublicKey(publicKeyEncoded);
+	return getAccountsFromPublicKey(publicKeyEncoded,$privateKey);
 }
 
-export const getAccountsFromPublicKey = (publicKeyEncoded) => {
+export const getAccountsFromPublicKey = (publicKeyEncoded,$privateKey) => {
 	var publicKeyHash = getHash(publicKeyEncoded.toString('hex'));
 	// console.log( publicKeyHash );
 
