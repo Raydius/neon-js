@@ -17,11 +17,15 @@ import secureRandom from 'secure-random';
 import buffer from 'buffer';
 
 
-// All of this stuff was wrapped in a class before, but really unnecessary as none of these were stateful
-// This flat structure should be more interpretable, and we can export them all as a module instead
+// All of this stuff was wrapped in a class before, but really unnecessary as
+// none of these were stateful
+// This flat structure should be more interpretable, and we can export them all
+// as a module instead
 
-// TODO: exporting ALL of these, but some of them are probably helpers and don't need to be exported
-// TODO: go through and add at least a basic description of everything these methods are doing
+// TODO: exporting ALL of these, but some of them are probably helpers and don't
+// need to be exported
+// TODO: go through and add at least a basic description of everything these
+// methods are doing
 
 export const getWIFFromPrivateKey = (privateKey) => {
     const hexKey = ab2hexstring(privateKey);
@@ -68,7 +72,7 @@ export const getInputData = ($coin, $amount) => {
 		k = k + 1;
 	}
 
-	/////////////////////////////////////////////////////////////////////////
+	// ///////////////////////////////////////////////////////////////////////
 	// coin[0]- coin[k]
 	var data = new Uint8Array(1 + 34 * (k + 1));
 
@@ -82,16 +86,16 @@ export const getInputData = ($coin, $amount) => {
 		// txid
 		var pos = 1 + (x * 34);
 		data.set(reverseArray(hexstring2ab(coin_ordered[x]['txid'])),pos);
-		//data.set(hexstring2ab(coin_ordered[x]['txid']), pos);
+		// data.set(hexstring2ab(coin_ordered[x]['txid']), pos);
 
 		// index
 		pos = 1 + (x * 34) + 32;
 		let inputIndex = numStoreInMemory(coin_ordered[x]['index'].toString(16),4);
-		//inputIndex = numStoreInMemory(coin_ordered[x]['n'].toString(16), 2);
+		// inputIndex = numStoreInMemory(coin_ordered[x]['n'].toString(16), 2);
 		data.set(hexstring2ab(inputIndex), pos);
 	}
 
-	/////////////////////////////////////////////////////////////////////////
+	// ///////////////////////////////////////////////////////////////////////
 
 	// calc coin_amount
 	var coin_amount = 0;
@@ -99,7 +103,7 @@ export const getInputData = ($coin, $amount) => {
 		coin_amount = coin_amount + parseFloat(coin_ordered[i].value);
 	}
 
-	/////////////////////////////////////////////////////////////////////////
+	// ///////////////////////////////////////////////////////////////////////
 
 	return {
 		amount: coin_amount,
@@ -111,12 +115,12 @@ export const getInputData = ($coin, $amount) => {
 // for now, leaving as reference
 export const issueTransaction = ($issueAssetID, $issueAmount, $publicKeyEncoded) => {
 	var signatureScript = createSignatureScript($publicKeyEncoded);
-	//console.log( signatureScript.toString('hex') );
+	// console.log( signatureScript.toString('hex') );
 
 	var myProgramHash = getHash(signatureScript);
-	//console.log( myProgramHash.toString() );
+	// console.log( myProgramHash.toString() );
 
-	////////////////////////////////////////////////////////////////////////
+	// //////////////////////////////////////////////////////////////////////
 	// data
 	var data = "01";
 
@@ -143,12 +147,13 @@ export const issueTransaction = ($issueAssetID, $issueAmount, $publicKeyEncoded)
 	// Outputs[0] ProgramHash
 	data = data + myProgramHash.toString()
 
-	//console.log(data);
+	// console.log(data);
 
 	return data;
 };
 
-// TODO: we probably don't need to keep this function in the API, people aren't going to be using the wallet to register new assets
+// TODO: we probably don't need to keep this function in the API, people aren't
+// going to be using the wallet to register new assets
 // for now, leaving as reference
 export const registerTransaction = ($assetName, $assetAmount, $publicKeyEncoded) => {
 	var ecparams = ecurve.getCurveByName('secp256r1');
@@ -199,7 +204,8 @@ export const registerTransaction = ($assetName, $assetAmount, $publicKeyEncoded)
 };
 
 // TODO: this is important
-// Also, likely want some high level wrapper that combines TransferTransaction, addContract, and signatureData
+// Also, likely want some high level wrapper that combines TransferTransaction,
+// addContract, and signatureData
 export const addContract =( $txData, $sign, $publicKeyEncoded ) => {
 	var signatureScript = createSignatureScript($publicKeyEncoded);
   // console.log(signatureScript);
@@ -228,7 +234,7 @@ export const verifyAddress = ( $toAddress ) => {
 	var ProgramSha256Buffer = hexstring2ab(ProgramSha256_2.toString());
 
 	if (ab2hexstring(ProgramSha256Buffer.slice(0, 4)) != ab2hexstring(ProgramHash.slice(21, 25))) {
-		//address verify failed.
+		// address verify failed.
 		return false;
 	}
 
@@ -263,7 +269,8 @@ export const verifyPublicKeyEncoded = ( $publicKeyEncoded ) => {
 };
 
 // TODO: important, requires significant documentation
-// all of these arguments should be documented and made clear, what $coin looks like etc.
+// all of these arguments should be documented and made clear, what $coin looks
+// like etc.
 // also, remove $ variable names, most likey
 export const transferTransaction = ($coin, $publicKeyEncoded, $toAddress, $Amount) => {
 	var ProgramHash = base58.decode($toAddress);
@@ -273,7 +280,7 @@ export const transferTransaction = ($coin, $publicKeyEncoded, $toAddress, $Amoun
 	var ProgramSha256Buffer = hexstring2ab(ProgramSha256_2.toString());
 
 	if (ab2hexstring(ProgramSha256Buffer.slice(0, 4)) != ab2hexstring(ProgramHash.slice(21, 25))) {
-		//address verify failed.
+		// address verify failed.
 		return -1;
 	}
 
@@ -318,12 +325,12 @@ export const transferTransaction = ($coin, $publicKeyEncoded, $toAddress, $Amoun
 		// output num
 		data.set(hexstring2ab("01"), inputLen + 3);
 
-		////////////////////////////////////////////////////////////////////
+		// //////////////////////////////////////////////////////////////////
 		// OUTPUT - 0
 
 		// output asset
 		data.set(reverseArray(hexstring2ab($coin['assetid'])),inputLen+4);
-		//data.set(hexstring2ab($coin['assetid']), inputLen + 4);
+		// data.set(hexstring2ab($coin['assetid']), inputLen + 4);
 
 		// output value
 		const num1 = parseInt($Amount * 100000000);
@@ -333,19 +340,19 @@ export const transferTransaction = ($coin, $publicKeyEncoded, $toAddress, $Amoun
 		// output ProgramHash
 		data.set(ProgramHash, inputLen + 44);
 
-		////////////////////////////////////////////////////////////////////
+		// //////////////////////////////////////////////////////////////////
 
 	} else {
 
 		// output num
 		data.set(hexstring2ab("02"), inputLen + 3);
 
-		////////////////////////////////////////////////////////////////////
+		// //////////////////////////////////////////////////////////////////
 		// OUTPUT - 0
 
 		// output asset
 		data.set(reverseArray(hexstring2ab($coin['assetid'])),inputLen+4);
-		//data.set(hexstring2ab($coin['assetid']), inputLen + 4);
+		// data.set(hexstring2ab($coin['assetid']), inputLen + 4);
 
 		// output value
 		const num1 = parseInt($Amount * 100000000);
@@ -355,12 +362,12 @@ export const transferTransaction = ($coin, $publicKeyEncoded, $toAddress, $Amoun
 		// output ProgramHash
 		data.set(ProgramHash, inputLen + 44);
 
-		////////////////////////////////////////////////////////////////////
+		// //////////////////////////////////////////////////////////////////
 		// OUTPUT - 1
 
 		// output asset
 		data.set(reverseArray(hexstring2ab($coin['assetid'])),inputLen+64);
-		//data.set(hexstring2ab($coin['assetid']), inputLen + 64);
+		// data.set(hexstring2ab($coin['assetid']), inputLen + 64);
 
 		// output value
 		const num2 = parseInt(inputAmount * 100000000 - num1);
@@ -370,9 +377,9 @@ export const transferTransaction = ($coin, $publicKeyEncoded, $toAddress, $Amoun
 		// output ProgramHash
 		data.set(hexstring2ab(myProgramHash.toString()), inputLen + 104);
 
-		////////////////////////////////////////////////////////////////////
+		// //////////////////////////////////////////////////////////////////
 
-		//console.log( "Signature Data:", ab2hexstring(data) );
+		// console.log( "Signature Data:", ab2hexstring(data) );
 	}
 
 	return ab2hexstring(data);
@@ -428,7 +435,7 @@ export const claimTransaction = (claims, publicKeyEncoded, toAddress, amount) =>
 	// Finally add program hash
 	data = data + myProgramHash.toString();
 
-	//console.log(data);
+	// console.log(data);
 
 	return data;
 };
@@ -437,18 +444,18 @@ export const toAddress = ($ProgramHash) => {
 	var data = new Uint8Array(1 + $ProgramHash.length);
 	data.set([23]);
 	data.set($ProgramHash, 1);
-	//console.log(ab2hexstring(data));
+	// console.log(ab2hexstring(data));
 
 	var ProgramHexString = CryptoJS.enc.Hex.parse(ab2hexstring(data));
 	var ProgramSha256 = CryptoJS.SHA256(ProgramHexString);
 	var ProgramSha256_2 = CryptoJS.SHA256(ProgramSha256);
 	var ProgramSha256Buffer = hexstring2ab(ProgramSha256_2.toString());
-	//console.log(ab2hexstring(ProgramSha256Buffer));
+	// console.log(ab2hexstring(ProgramSha256Buffer));
 
 	var datas = new Uint8Array(1 + $ProgramHash.length + 4);
 	datas.set(data);
 	datas.set(ProgramSha256Buffer.slice(0, 4), 21);
-	//console.log(ab2hexstring(datas));
+	// console.log(ab2hexstring(datas));
 
 	return base58.encode(datas);
 };
@@ -475,7 +482,7 @@ export const getPrivateKeyFromWIF = ($wif) => {
 	var dataSha256Buffer = hexstring2ab(dataSha256_2.toString());
 
 	if (ab2hexstring(dataSha256Buffer.slice(0, 4)) != ab2hexstring(data.slice(data.length - 4, data.length))) {
-		//wif verify failed.
+		// wif verify failed.
 		return -2;
 	}
 
@@ -536,16 +543,16 @@ export const fetchAccountsFromPublicKeyEncoded = ($publicKeyEncoded) => {
 	var accounts = [];
 
 	var publicKeyHash = getHash($publicKeyEncoded);
-	//console.log( publicKeyHash );
+	// console.log( publicKeyHash );
 
 	var script = createSignatureScript($publicKeyEncoded);
-	//console.log( script );
+	// console.log( script );
 
 	var programHash = getHash(script);
-	//console.log( programHash );
+	// console.log( programHash );
 
 	var address = toAddress(hexstring2ab(programHash.toString()));
-	//console.log( address );
+	// console.log( address );
 
 	accounts[0] = {
 		privatekey: '',
@@ -567,19 +574,23 @@ export const getAccountsFromPrivateKey = ($privateKey) => {
 
 	var accounts = [];
 	var publicKeyEncoded = getPublicKey($privateKey, true);
-	//console.log( publicKeyEncoded );
+	
+	// console.log( publicKeyEncoded );
+	return getAccountsFromPublicKey(publicKeyEncoded);
+}
 
+export const getAccountsFromPublicKey = (publicKeyEncoded) => {
 	var publicKeyHash = getHash(publicKeyEncoded.toString('hex'));
-	//console.log( publicKeyHash );
+	// console.log( publicKeyHash );
 
 	var script = createSignatureScript(publicKeyEncoded);
-	//console.log( script );
+	// console.log( script );
 
 	var programHash = getHash(script);
-	//console.log( programHash );
+	// console.log( programHash );
 
 	var address = toAddress(hexstring2ab(programHash.toString()));
-	//console.log( address );
+	// console.log( address );
 
 	accounts[0] = {
 		privatekey: $privateKey,
