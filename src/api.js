@@ -28,7 +28,7 @@ export const getRPCEndpoint = (net) => {
 };
 
 // wrapper for querying node RPC
-const queryRPC = (net, method, params, id = 1) => {
+export const queryRPC = (net, method, params, id = 1) => {
   let jsonRequest = axios.create({
     headers: {"Content-Type": "application/json"}
   });
