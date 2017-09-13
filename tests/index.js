@@ -6,12 +6,14 @@ import { ab2str,
   reverseArray,
   numStoreInMemory,
   stringToBytes } from '../src/utils';
-import * as api from '../lib/index';
+import * as api from '../src/api';
 import axios from 'axios';
 var chaiAsPromised = require("chai-as-promised");
 chai.use(chaiAsPromised);
 const should = chai.should();
 
+const BASE58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz'
+var base58 = require('base-x')(BASE58)
 
 describe('Wallet', function() {
   this.timeout(15000);
@@ -19,7 +21,9 @@ describe('Wallet', function() {
   const testKeys = {
     'a': {
       address: 'ALq7AWrhAueN6mJNqk6FHJjnsEoPRytLdW',
-      wif: 'L1QqQJnpBwbsPGAuutuzPTac8piqvbR1HRjrY5qHup48TBCBFe4g'
+      wif: 'L1QqQJnpBwbsPGAuutuzPTac8piqvbR1HRjrY5qHup48TBCBFe4g',
+      passphrase: 'city of zion',
+      encryptedWif: '6PYLHmDf6AjF4AsVtosmxHuPYeuyJL3SLuw7J1U8i7HxKAnYNsp61HYRfF'
     },
     b: {
       address: "ALfnhLg7rUyL6Jr98bzzoxz5J7m64fbR4s",
@@ -53,6 +57,42 @@ describe('Wallet', function() {
     const account = api.getAccountsFromWIFKey(wif)[0];
     account.privatekey.should.equal(ab2hexstring(privateKey));
     done();
+  });
+
+  it('should encrypt a WIF using nep2', (done) => {
+    api.encrypt_wif(testKeys.a.wif, testKeys.a.passphrase).then((result) => {
+      result.should.equal(testKeys.a.encryptedWif);
+      done();
+    })
+  });
+
+  it('should verify that script has produces the same address', (done) => {
+    for (let i = 0; i < 100; i++){
+      const privateKey = ab2hexstring(api.generatePrivateKey());
+      const account = api.getAccountsFromPrivateKey(privateKey)[0];
+      const addressFromScript1 = api.toAddress(base58.decode(account.address).slice(1, 21));
+      const addressFromScript2 = api.toAddress(hexstring2ab(api.getHash(api.createSignatureScript(account.publickeyEncoded)).toString()));
+      addressFromScript1.should.equal(account.address);
+      addressFromScript2.should.equal(account.address);
+    }
+    done();
+  });
+
+  it('should show that Neo address passes validation', (done) => {
+    api.verifyAddress(testKeys.a.address).should.equal(true);
+    done();
+  });
+
+  it('should show that btc address fails validation', (done) => {
+    api.verifyAddress("1BoatSLRHtKNngkdXEeobR76b53LETtpyT").should.equal(false);
+    done();
+  });
+
+  it('should decrypt a WIF using nep2', (done) => {
+    api.decrypt_wif(testKeys.a.encryptedWif, testKeys.a.passphrase).then((result) => {
+      result.should.equal(testKeys.a.wif);
+      done();
+    })
   });
 
   it('should get keys from a WIF', (done) =>{
