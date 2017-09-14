@@ -50,7 +50,7 @@ export const getClaimAmounts = (net, address) => {
 }
 
 // do a claim transaction on all available (spent) gas
-export const doClaimAllGas = (net, fromWif) => {
+export const doClaimAllGas = (net, fromWif, signatureDataFn) => {
   const apiEndpoint = getAPIEndpoint(net);
   const account = getAccountsFromWIFKey(fromWif)[0];
   // TODO: when fully working replace this with mainnet/testnet switch
@@ -58,7 +58,12 @@ export const doClaimAllGas = (net, fromWif) => {
     const claims = response.data["claims"];
     const total_claim = response.data["total_claim"];
     const txData = claimTransaction(claims, account.publickeyEncoded, account.address, total_claim);
-    const sign = signatureData(txData, account.privatekey);
+    var sign;
+    if(signatureDataFn == undefined) {
+        sign = signatureData(txData, account.privatekey);
+    } else {
+        sign = signatureDataFn(txData);
+    }
     const txRawData = addContract(txData, sign, account.publickeyEncoded);
     return queryRPC(net, "sendrawtransaction", [txRawData], 2);
   });
@@ -92,7 +97,7 @@ export const getWalletDBHeight = (net) => {
 }
 
 // send an asset to an address
-export const doSendAsset = (net, toAddress, fromWif, assetType, amount) => {
+export const doSendAsset = (net, toAddress, fromWif, assetType, amount, signatureDataFn) => {
   let assetId, assetName, assetSymbol;
   if (assetType === "Neo"){
     assetId = neoId;
@@ -108,7 +113,12 @@ export const doSendAsset = (net, toAddress, fromWif, assetType, amount) => {
       "name": assetType
     }
     const txData = transferTransaction(coinsData, fromAccount.publickeyEncoded, toAddress, amount);
-    const sign = signatureData(txData, fromAccount.privatekey);
+    var sign;
+    if(signatureDataFn == undefined) {
+        sign = signatureData(txData, account.privatekey);
+    } else {
+        sign = signatureDataFn(txData);
+    }
     const txRawData = addContract(txData, sign, fromAccount.publickeyEncoded);
     return queryRPC(net, "sendrawtransaction", [txRawData], 4);
   });
