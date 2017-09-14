@@ -8,6 +8,10 @@ import { ab2str,
   stringToBytes } from '../src/utils';
 import * as api from '../src/api';
 import axios from 'axios';
+import {
+  getPublicKeyInfo,
+  ledgerNanoS_PublicKey
+} from '../src/ledgerNanoS';
 var chaiAsPromised = require("chai-as-promised");
 chai.use(chaiAsPromised);
 const should = chai.should();
@@ -155,6 +159,26 @@ describe('Wallet', function() {
         response.result.should.equal(true);
         done();
       });
+    })
+  });
+  
+
+  it('should send GAS', (done) => {
+    new Promise( getPublicKeyInfo ).then((response) => {
+      if(ledgerNanoS_PublicKey === undefined) {
+        // no ledger, and we can't expect everyone to have one.
+        console.log("no ledger nano s detected, skipping tests.");
+        done();
+      } else {
+        api.doSendAsset(testNet, testKeys.b.address, undefined, "Gas", 1).then((response) => {
+          response.result.should.equal(true);
+          // send back so we can re-run
+          api.doSendAsset(testNet, testKeys.a.address, undefined, "Gas", 1).then((response) => {
+            response.result.should.equal(true);
+            done();
+          });
+        });
+      }
     })
   });
 });

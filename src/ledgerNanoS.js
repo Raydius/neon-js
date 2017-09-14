@@ -62,7 +62,7 @@ const getLedgerDeviceInfo = function( resolve, reject ) {
     process.stdout.write( "success getLedgerDeviceInfo  \n" );
 };
 
-const getPublicKeyInfo = function( resolve, reject ) {
+export const getPublicKeyInfo = function( resolve, reject ) {
     process.stdout.write( "started getPublicKeyInfo  \n" );
     ledgerNanoS_PublicKey = undefined;
     ledgerNanoS_PublicKeyInfo = undefined;
@@ -104,7 +104,7 @@ const getPublicKeyInfo = function( resolve, reject ) {
     process.stdout.write( "success getPublicKeyInfo  \n" );
 };
 
-const createSignatureAsynch = function( txData ) {
+export const createSignatureAsynch = function( txData ) {
     return new Promise( function( resolve, reject ) {
         var signatureInfo = "Ledger Signing Text of Length [" + txData.length + "], Please Confirm Using the Device's Buttons. " + txData;
 

@@ -1,6 +1,6 @@
 import axios from 'axios';
-import { getAccountsFromWIFKey, transferTransaction, signatureData, addContract, claimTransaction } from './wallet';
-import { ledgerNanoS_PublicKey } from './ledgerNanoS';
+import { getAccountsFromWIFKey, transferTransaction, signatureData, addContract, claimTransaction, getPublicKeyEncoded, getAccountsFromPublicKey } from './wallet';
+import { ledgerNanoS_PublicKey, createSignatureAsynch } from './ledgerNanoS';
 
 export * from './wallet.js';
 export * from './nep2.js';
@@ -94,6 +94,7 @@ export const doSendAsset = ( net, toAddress, fromWif, assetType, amount ) => {
         var fromAccount;
         if ( fromWif == undefined ) {
             const publicKey = ledgerNanoS_PublicKey;
+            process.stdout.write( "interim doSendAsset publicKey \"" + publicKey+ "\" \n" );
             const publicKeyEncoded = getPublicKeyEncoded( publicKey );
             fromAccount = getAccountsFromPublicKey( publicKeyEncoded )[0];
         } else {
@@ -110,10 +111,18 @@ export const doSendAsset = ( net, toAddress, fromWif, assetType, amount ) => {
                 "balance": response[assetType],
                 "name": assetType
             }
-            process.stdout.write( "interim doSendAsset transferTransaction \n" );
+            process.stdout.write( "interim doSendAsset transferTransaction coinsData \"" + JSON.stringify(coinsData) + "\"\n" );
+            process.stdout.write( "interim doSendAsset transferTransaction fromAccount.publickeyEncoded \"" + fromAccount.publickeyEncoded + "\"\n" );
+            process.stdout.write( "interim doSendAsset transferTransaction toAddress \"" + toAddress + "\"\n" );
+            process.stdout.write( "interim doSendAsset transferTransaction amount \"" + amount + "\"\n" );
 
-            const txData = transferTransaction( coinsData, fromAccount.publickeyEncoded, toAddress, amount );
+            var txData = transferTransaction( coinsData, fromAccount.publickeyEncoded, toAddress, amount );
 
+            // helps with ledger unit tests where we want to sign a transaction.
+            if(txData == null) {
+                txData = "00000000000000000000000000";
+            }
+            
             process.stdout.write( "interim doSendAsset txData \"" + txData + "\" \n" );
 
             signAndAddContractAndSendTransaction( fromWif, net, txData, fromAccount ).then( function( response ) {
@@ -164,6 +173,7 @@ export const doClaimAllGas = ( net, fromWif ) => {
         var account;
         if ( fromWif == undefined ) {
             const publicKey = ledgerNanoS_PublicKey;
+            process.stdout.write( "interim doSendAsset publicKey \"" + publicKey+ "\" \n" );
             const publicKeyEncoded = getPublicKeyEncoded( publicKey );
             account = getAccountsFromPublicKey( publicKeyEncoded )[0];
         } else {
