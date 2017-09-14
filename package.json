@@ -15,7 +15,7 @@
 	},
 	"name": "neon-js",
 	"description": "Javascript libraries for neo wallet using https://github.com/neochainio/neowallet/blob/master/js/wallet.js as the original source.",
-	"version": "1.0.4",
+	"version": "1.0.5",
 	"main": "lib/index.js",
 	"dependencies": {
 		"axios": "^0.16.2",
@@ -29,6 +29,7 @@
 		"fs": "^0.0.1-security",
 		"js-scrypt": "^0.2.0",
 		"ledger-node-js-api": "git+https://github.com/coranos/ledger-node-js-api.git#1.1.4",
+		"node-hid": "^0.5.7",
 		"secp256k1": "^3.3.0",
 		"secure-random": "^1.1.1",
 		"sql.js": "^0.4.0",
