@@ -2,6 +2,10 @@
 
 module.exports = {
   entry: './src/api.js',
+  externals : {
+    'node-hid' : 'require("node-hid")',
+    'ledger-node-js-api' : 'require("ledger-node-js-api")'
+  },
   target: 'node',
   output: {
       path: __dirname,
