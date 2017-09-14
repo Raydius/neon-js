@@ -11,7 +11,8 @@
 		"eslint-config-airbnb-base": "^11.2.0",
 		"eslint-plugin-import": "^2.6.1",
 		"mocha": "^3.4.2",
-		"webpack": "^3.0.0"
+		"webpack": "^3.0.0",
+		"electron-rebuild": "^1.6.0"
 	},
 	"name": "neon-js",
 	"description": "Javascript libraries for neo wallet using https://github.com/neochainio/neowallet/blob/master/js/wallet.js as the original source.",
@@ -38,7 +39,8 @@
 		"test": "mocha --compilers js:babel-core/register --recursive ./tests/**.js",
 		"build": "webpack",
 		"prepublish": "npm run build",
-		"lint": "eslint src/**.js"
+		"lint": "eslint src/**.js",
+		"electron-rebuild": "electron-rebuild --force --module_dir . -w node-hid "
 	},
 	"repository": {
 		"type": "git",
