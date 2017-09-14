@@ -2,9 +2,6 @@
 
 module.exports = {
   entry: './src/api.js',
-  externals : {
-    'node-hid' : 'require("node-hid")'
-  },
   target: 'node',
   output: {
       path: __dirname,
