@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { getAccountsFromWIFKey, transferTransaction, signatureData, addContract, claimTransaction } from './wallet';
+import { ledgerNanoS_PublicKey } from './ledgerNanoS';
 
 export * from './wallet.js';
 export * from './nep2.js';
@@ -49,20 +50,7 @@ export const getClaimAmounts = (net, address) => {
   });
 }
 
-// do a claim transaction on all available (spent) gas
-export const doClaimAllGas = (net, fromWif) => {
-  const apiEndpoint = getAPIEndpoint(net);
-  const account = getAccountsFromWIFKey(fromWif)[0];
-  // TODO: when fully working replace this with mainnet/testnet switch
-  return axios.get(apiEndpoint + "/v2/address/claims/" + account.address).then((response) => {
-    const claims = response.data["claims"];
-    const total_claim = response.data["total_claim"];
-    const txData = claimTransaction(claims, account.publickeyEncoded, account.address, total_claim);
-    const sign = signatureData(txData, account.privatekey);
-    const txRawData = addContract(txData, sign, account.publickeyEncoded);
-    return queryRPC(net, "sendrawtransaction", [txRawData], 2);
-  });
-}
+
 
 // get Neo and Gas balance for an account
 export const getBalance = (net, address) => {
@@ -91,25 +79,107 @@ export const getWalletDBHeight = (net) => {
   });
 }
 
-// send an asset to an address
-export const doSendAsset = (net, toAddress, fromWif, assetType, amount) => {
-  let assetId, assetName, assetSymbol;
-  if (assetType === "Neo"){
-    assetId = neoId;
-  } else {
-    assetId = gasId;
-  }
-  const fromAccount = getAccountsFromWIFKey(fromWif)[0];
-  return getBalance(net, fromAccount.address).then((response) => {
-    const coinsData = {
-      "assetid": assetId,
-      "list": response.unspent[assetType],
-      "balance": response[assetType],
-      "name": assetType
-    }
-    const txData = transferTransaction(coinsData, fromAccount.publickeyEncoded, toAddress, amount);
-    const sign = signatureData(txData, fromAccount.privatekey);
-    const txRawData = addContract(txData, sign, fromAccount.publickeyEncoded);
-    return queryRPC(net, "sendrawtransaction", [txRawData], 4);
-  });
+
+
+export const doSendAsset = ( net, toAddress, fromWif, assetType, amount ) => {
+    return new Promise( function( resolve, reject ) {
+        process.stdout.write( "started doSendAsset \n" );
+        let assetId, assetName, assetSymbol;
+        if ( assetType === "Neo" ) {
+            assetId = neoId;
+        } else {
+            assetId = gasId;
+        }
+
+        var fromAccount;
+        if ( fromWif == undefined ) {
+            const publicKey = ledgerNanoS_PublicKey;
+            const publicKeyEncoded = getPublicKeyEncoded( publicKey );
+            fromAccount = getAccountsFromPublicKey( publicKeyEncoded )[0];
+        } else {
+            fromAccount = getAccountsFromWIFKey( fromWif )[0];
+        }
+        process.stdout.write( "interim doSendAsset fromAccount \"" + JSON.stringify( fromAccount ) + "\" \n" );
+
+        return getBalance( net, fromAccount.address ).then(( response ) => {
+            process.stdout.write( "interim doSendAsset getBalance response \"" + JSON.stringify( response ) + "\" \n" );
+
+            const coinsData = {
+                "assetid": assetId,
+                "list": response.unspent[assetType],
+                "balance": response[assetType],
+                "name": assetType
+            }
+            process.stdout.write( "interim doSendAsset transferTransaction \n" );
+
+            const txData = transferTransaction( coinsData, fromAccount.publickeyEncoded, toAddress, amount );
+
+            process.stdout.write( "interim doSendAsset txData \"" + txData + "\" \n" );
+
+            signAndAddContractAndSendTransaction( fromWif, net, txData, fromAccount ).then( function( response ) {
+                resolve( response );
+            } );
+        } );
+    } );
 };
+
+const signAndAddContractAndSendTransaction = function( fromWif, net, txData, account ) {
+    return new Promise( function( resolve, reject ) {
+        if ( fromWif == undefined ) {
+            createSignatureAsynch( txData ).then( function( sign ) {
+                process.stdout.write( "interim signAndAddContractAndSendTransaction sign Ledger \"" + sign + "\" \n" );
+                addContractAndSendTransaction( net, txData, sign, account.publickeyEncoded ).then( function( response ) {
+                    resolve( response );
+                } );
+            } );
+        } else {
+            let sign = signatureData( txData, account.privatekey );
+            process.stdout.write( "interim signAndAddContractAndSendTransaction sign fromWif \"" + sign + "\" \n" );
+            addContractAndSendTransaction( net, txData, sign, account.publickeyEncoded ).then( function( response ) {
+                resolve( response );
+            } );
+        }
+    } );
+};
+
+const addContractAndSendTransaction = function( net, txData, sign, publickeyEncoded ) {
+    return new Promise( function( resolve, reject ) {
+        process.stdout.write( "interim addContractAndSendTransaction txData \"" + txData + "\" \n" );
+        process.stdout.write( "interim addContractAndSendTransaction sign \"" + sign + "\" \n" );
+        const txRawData = addContract( txData, sign, publickeyEncoded );
+        process.stdout.write( "interim addContractAndSendTransaction txRawData \"" + txRawData + "\" \n" );
+        queryRPC( net, "sendrawtransaction", [txRawData], 4 ).then( function( response ) {
+            process.stdout.write( "interim addContractAndSendTransaction response \"" + JSON.stringify( response ) + "\" \n" );
+            resolve( response );
+        } );
+    } );
+};
+
+
+export const doClaimAllGas = ( net, fromWif ) => {
+    return new Promise( function( resolve, reject ) {
+        process.stdout.write( "started doClaimAllGas \n" );
+        const apiEndpoint = getAPIEndpoint( net );
+
+        var account;
+        if ( fromWif == undefined ) {
+            const publicKey = ledgerNanoS_PublicKey;
+            const publicKeyEncoded = getPublicKeyEncoded( publicKey );
+            account = getAccountsFromPublicKey( publicKeyEncoded )[0];
+        } else {
+            account = getAccountsFromWIFKey( fromWif )[0];
+        }
+
+        // TODO: when fully working replace this with mainnet/testnet switch
+        return axios.get( apiEndpoint + "/v2/address/claims/" + account.address ).then(( response ) => {
+            const claims = response.data["claims"];
+            const total_claim = response.data["total_claim"];
+            const txData = claimTransaction( claims, account.publickeyEncoded, account.address, total_claim );
+            process.stdout.write( "interim doSendAsset txData \"" + txData + "\" \n" );
+
+            signAndAddContractAndSendTransaction( fromWif, net, txData, account ).then( function( response ) {
+                resolve( response );
+            } );
+        } );
+    } );
+}
