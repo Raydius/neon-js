@@ -1,11 +1,9 @@
-const path = require('path');
-
-const folders = {
-  hid : path.resolve('.', './node_modules/node-hid/build/Release')
-};
-
 module.exports = {
   entry : './src/api.js',
+  externals : {
+    'node-hid' : 'node-hid',
+    'ledger-node-js-api' : 'ledger-node-js-api'
+  },
   target : 'node',
   output : {
     path : __dirname,
@@ -13,14 +11,14 @@ module.exports = {
     libraryTarget : 'umd'
   },
   module : {
-    rules : [ {
-      test : /\HID.node$/,
-      include : folders.hid,
+    loaders : [ {
+      test : /\.js$/,
+      exclude : /(node_modules|bower_components)/,
       use : {
-        loader : 'file-loader',
+        loader : 'babel-loader',
         options : {
-          name : 'build/Release/[name].[ext]',
-          useRelativePath : false,
+          presets : [ 'env' ],
+          plugins : [ require('babel-plugin-transform-object-rest-spread') ]
         }
       }
     } ]

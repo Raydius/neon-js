@@ -1,7 +1,5 @@
 import comm_node from 'ledger-node-js-api';
 
-import hid_node_file from "../node_modules/node-hid/build/Release/HID.node";
-
 export var ledgerNanoS_PublicKey = undefined;
 
 export var ledgerNanoS_PublicKeyInfo = undefined;
